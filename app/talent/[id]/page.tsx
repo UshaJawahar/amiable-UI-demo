@@ -28,12 +28,14 @@ import {
   Flag,
   Bookmark,
   ExternalLink,
-  FileText
+  FileText,
+  AlertCircle
 } from 'lucide-react'
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import { AnimatePresence } from 'framer-motion'
 import SocialMediaEmbed from '../../components/SocialMediaEmbed'
+import { getTalentById } from '../../lib/api'
 
 interface TalentProfile {
   id: string
@@ -47,11 +49,12 @@ interface TalentProfile {
   verified: boolean
   hasDisability: boolean
   disabilityType?: string
-  bio: string
+  bio?: string
   skills: string[]
   languages: string[]
   availability: string
   hourlyRate?: string
+  avatar?: string | null
   portfolio: {
     videos: { id: string; title: string; url: string; thumbnail: string; duration: string }[]
     images: { id: string; title: string; url: string; description: string }[]
@@ -108,191 +111,70 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
   const [showContactModal, setShowContactModal] = useState(false)
   const [selectedVideo, setSelectedVideo] = useState<string | null>(null)
 
-  // Mock data - in real app this would come from API
+  // Fetch talent data from API
   useEffect(() => {
-    const mockTalent: TalentProfile = {
-      id: params.id,
-      name: 'Emma Thompson',
-      role: 'acting',
-      category: 'Drama',
-      location: 'New York, NY',
-      experience: '5+ years',
-      rating: 4.9,
-      featured: true,
-      verified: true,
-      hasDisability: true,
-      disabilityType: 'Visual impairment',
-      bio: 'Award-winning actress with a passion for inclusive storytelling. Specializes in character-driven roles that challenge perceptions and promote diversity in media. With over 5 years of experience in theater, film, and television, I bring authenticity and depth to every performance.',
-      skills: ['Method Acting', 'Voice Training', 'Stage Combat', 'Character Development', 'Accent Training', 'Physical Theater'],
-      languages: ['English', 'French', 'Spanish'],
-      availability: 'Available for new projects',
-      hourlyRate: '$150-200/hour',
-      portfolio: {
-        videos: [
-          {
-            id: '1',
-            title: 'Drama Scene - "The Light Within"',
-            url: '/videos/emma-drama-scene.mp4',
-            thumbnail: '/thumbnails/drama-scene.jpg',
-            duration: '3:45'
-          },
-          {
-            id: '2',
-            title: 'Comedy Audition - "Office Life"',
-            url: '/videos/emma-comedy-audition.mp4',
-            thumbnail: '/thumbnails/comedy-audition.jpg',
-            duration: '2:30'
-          },
-          {
-            id: '3',
-            title: 'Voice Acting Demo',
-            url: '/videos/emma-voice-demo.mp4',
-            thumbnail: '/thumbnails/voice-demo.jpg',
-            duration: '4:15'
+    const fetchTalent = async () => {
+      try {
+        setLoading(true)
+        const response = await getTalentById(params.id)
+        
+        if (response.success) {
+          const talentData = response.data
+          
+          // Transform API data to match our interface
+          const transformedTalent: TalentProfile = {
+            id: talentData.id,
+            name: talentData.name,
+            role: talentData.role,
+            category: talentData.category,
+            location: talentData.location,
+            experience: talentData.experience,
+            rating: talentData.rating || 4.5,
+            featured: talentData.featured || false,
+            verified: talentData.verified || true,
+            hasDisability: talentData.hasDisability || false,
+            disabilityType: talentData.disabilityType,
+            bio: talentData.bio,
+            skills: talentData.skills || [],
+            languages: talentData.languages || [],
+            availability: talentData.availability || 'Available',
+            avatar: talentData.avatar,
+            portfolio: {
+              videos: [],
+              images: [],
+              documents: [],
+              socialMediaReels: []
+            },
+            workHistory: [],
+            education: [],
+            certifications: [],
+            socialLinks: {},
+            contactInfo: {
+              email: 'contact@example.com', // This would come from the talent's profile
+              phone: '+1-555-0123',
+              preferredContact: 'email'
+            },
+            stats: {
+              profileViews: 1247,
+              connections: 89,
+              projects: 23,
+              responseRate: 95
+            }
           }
-        ],
-        images: [
-          {
-            id: '1',
-            title: 'Headshot - Professional',
-            url: '/images/emma-headshot-1.jpg',
-            description: 'Professional headshot for commercial and film work'
-          },
-          {
-            id: '2',
-            title: 'Character Shot - "The Detective"',
-            url: '/images/emma-character-1.jpg',
-            description: 'Character development for crime drama role'
-          },
-          {
-            id: '3',
-            title: 'Behind the Scenes - Theater Production',
-            url: '/images/emma-theater-1.jpg',
-            description: 'Behind the scenes from "Romeo and Juliet" production'
-          }
-        ],
-        documents: [
-          {
-            id: '1',
-            title: 'Resume - Emma Thompson',
-            url: '/documents/emma-resume.pdf',
-            type: 'pdf'
-          },
-          {
-            id: '2',
-            title: 'Acting Reel - 2024',
-            url: '/documents/emma-reel-2024.pdf',
-            type: 'pdf'
-          },
-          {
-            id: '3',
-            title: 'Disability Certificate',
-            url: '/documents/emma-disability-cert.pdf',
-            type: 'pdf'
-          }
-        ],
-        socialMediaReels: [
-          {
-            id: '1',
-            platform: 'instagram',
-            url: 'https://www.instagram.com/p/ABC123/',
-            title: 'Behind the Scenes - Drama Scene',
-            description: 'Behind the scenes look at my latest drama scene'
-          },
-          {
-            id: '2',
-            platform: 'youtube',
-            url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
-            title: 'Acting Workshop Demo',
-            description: 'Demonstration of various acting techniques'
-          },
-          {
-            id: '3',
-            platform: 'facebook',
-            url: 'https://www.facebook.com/video/123456789/',
-            title: 'Character Transformation',
-            description: 'Showing the transformation process for a role'
-          }
-        ]
-      },
-      workHistory: [
-        {
-          id: '1',
-          title: 'Lead Actress',
-          company: 'Broadway Theater Company',
-          duration: '2022-2024',
-          description: 'Played Juliet in modern adaptation of Romeo and Juliet',
-          type: 'theater'
-        },
-        {
-          id: '2',
-          title: 'Supporting Role',
-          company: 'Netflix Original Series',
-          duration: '2023',
-          description: 'Portrayed detective Sarah Chen in crime drama series',
-          type: 'tv'
-        },
-        {
-          id: '3',
-          title: 'Commercial Actress',
-          company: 'Various Brands',
-          duration: '2021-2024',
-          description: 'Featured in national commercials for inclusive brands',
-          type: 'commercial'
+          
+          setTalent(transformedTalent)
+        } else {
+          toast.error('Failed to fetch talent profile')
         }
-      ],
-      education: [
-        {
-          id: '1',
-          degree: 'Bachelor of Fine Arts in Acting',
-          institution: 'Juilliard School',
-          year: '2019',
-          description: 'Specialized in classical theater and contemporary performance'
-        },
-        {
-          id: '2',
-          degree: 'Certificate in Voice Acting',
-          institution: 'Voice Acting Academy',
-          year: '2020',
-          description: 'Professional voice acting training and certification'
-        }
-      ],
-      certifications: [
-        {
-          id: '1',
-          name: 'Screen Actors Guild (SAG)',
-          issuer: 'SAG-AFTRA',
-          year: '2021',
-          validUntil: '2025'
-        },
-        {
-          id: '2',
-          name: 'Accessibility in Performance',
-          issuer: 'Inclusive Arts Institute',
-          year: '2022',
-          validUntil: '2024'
-        }
-      ],
-      socialLinks: {
-        linkedin: 'https://linkedin.com/in/emma-thompson',
-        instagram: 'https://instagram.com/emmathompson',
-        website: 'https://emmathompson.com'
-      },
-      contactInfo: {
-        email: 'emma@example.com',
-        phone: '+1 (555) 123-4567',
-        preferredContact: 'email'
-      },
-      stats: {
-        profileViews: 1247,
-        connections: 89,
-        projects: 23,
-        responseRate: 98
+      } catch (error) {
+        console.error('Error fetching talent:', error)
+        toast.error('Failed to load talent profile')
+      } finally {
+        setLoading(false)
       }
     }
 
-    setTalent(mockTalent)
-    setLoading(false)
+    fetchTalent()
   }, [params.id])
 
   const handleFavorite = () => {
@@ -428,7 +310,20 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
               className="card"
             >
               <div className="flex items-start space-x-6">
-                <div className="w-24 h-24 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                {talent.avatar ? (
+                  <img 
+                    src={talent.avatar} 
+                    alt={talent.name}
+                    className="w-24 h-24 rounded-full object-cover"
+                    onError={(e) => {
+                      // Fallback to initials if image fails to load
+                      const target = e.target as HTMLImageElement;
+                      target.style.display = 'none';
+                      target.nextElementSibling?.classList.remove('hidden');
+                    }}
+                  />
+                ) : null}
+                <div className={`w-24 h-24 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ${talent.avatar ? 'hidden' : ''}`}>
                   {talent.name.charAt(0)}
                 </div>
                 
@@ -468,7 +363,9 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                     <span className="text-sm text-gray-600">({talent.rating})</span>
                   </div>
                   
-                  <p className="text-gray-700 leading-relaxed">{talent.bio}</p>
+                  {talent.bio && (
+                    <p className="text-gray-700 leading-relaxed">{talent.bio}</p>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -485,30 +382,38 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
               <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Skills</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {talent.skills.map((skill, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"
-                      >
-                        {skill}
-                      </span>
-                    ))}
-                  </div>
+                  {talent.skills.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {talent.skills.map((skill, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-primary-100 text-primary-700 text-sm rounded-full"
+                        >
+                          {skill}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No skills listed</p>
+                  )}
                 </div>
                 
                 <div>
                   <h4 className="font-medium text-gray-900 mb-3">Languages</h4>
-                  <div className="flex flex-wrap gap-2">
-                    {talent.languages.map((language, index) => (
-                      <span
-                        key={index}
-                        className="px-3 py-1 bg-secondary-100 text-secondary-700 text-sm rounded-full"
-                      >
-                        {language}
-                      </span>
-                    ))}
-                  </div>
+                  {talent.languages.length > 0 ? (
+                    <div className="flex flex-wrap gap-2">
+                      {talent.languages.map((language, index) => (
+                        <span
+                          key={index}
+                          className="px-3 py-1 bg-secondary-100 text-secondary-700 text-sm rounded-full"
+                        >
+                          {language}
+                        </span>
+                      ))}
+                    </div>
+                  ) : (
+                    <p className="text-gray-500 text-sm">No languages listed</p>
+                  )}
                 </div>
               </div>
             </motion.div>
@@ -558,9 +463,9 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                     className="space-y-6"
                   >
                     {/* Videos */}
-                    {talent.portfolio.videos.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Videos</h4>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Videos</h4>
+                      {talent.portfolio.videos.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
                           {talent.portfolio.videos.map((video) => (
                             <div key={video.id} className="relative group cursor-pointer">
@@ -579,13 +484,18 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center py-8">
+                          <Film className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No videos uploaded</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Images */}
-                    {talent.portfolio.images.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Images</h4>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Images</h4>
+                      {talent.portfolio.images.length > 0 ? (
                         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                           {talent.portfolio.images.map((image) => (
                             <div key={image.id} className="group cursor-pointer">
@@ -601,13 +511,18 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center py-8">
+                          <Camera className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No images uploaded</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Documents */}
-                    {talent.portfolio.documents.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Documents</h4>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Documents</h4>
+                      {talent.portfolio.documents.length > 0 ? (
                         <div className="space-y-3">
                           {talent.portfolio.documents.map((doc) => (
                             <div key={doc.id} className="flex items-center justify-between p-3 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
@@ -624,20 +539,30 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                             </div>
                           ))}
                         </div>
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center py-8">
+                          <FileText className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No documents uploaded</p>
+                        </div>
+                      )}
+                    </div>
 
                     {/* Social Media Reels */}
-                    {talent.portfolio.socialMediaReels.length > 0 && (
-                      <div>
-                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Social Media Reels</h4>
+                    <div>
+                      <h4 className="text-lg font-semibold text-gray-900 mb-4">Social Media Reels</h4>
+                      {talent.portfolio.socialMediaReels.length > 0 ? (
                         <SocialMediaEmbed
                           reels={talent.portfolio.socialMediaReels}
                           onReelsChange={() => {}} // Read-only in profile view
                           isEditable={false}
                         />
-                      </div>
-                    )}
+                      ) : (
+                        <div className="text-center py-8">
+                          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No social media links attached</p>
+                        </div>
+                      )}
+                    </div>
                   </motion.div>
                 )}
 
@@ -652,53 +577,74 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                     {/* Work History */}
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Work History</h4>
-                      <div className="space-y-4">
-                        {talent.workHistory.map((work) => (
-                          <div key={work.id} className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
-                            <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
-                              {getWorkTypeIcon(work.type)}
+                      {talent.workHistory.length > 0 ? (
+                        <div className="space-y-4">
+                          {talent.workHistory.map((work) => (
+                            <div key={work.id} className="flex items-start space-x-4 p-4 border border-gray-200 rounded-lg">
+                              <div className="w-10 h-10 bg-primary-100 rounded-lg flex items-center justify-center">
+                                {getWorkTypeIcon(work.type)}
+                              </div>
+                              <div className="flex-1">
+                                <h5 className="font-medium text-gray-900">{work.title}</h5>
+                                <p className="text-sm text-gray-600">{work.company}</p>
+                                <p className="text-sm text-gray-500">{work.duration}</p>
+                                <p className="text-sm text-gray-700 mt-2">{work.description}</p>
+                              </div>
                             </div>
-                            <div className="flex-1">
-                              <h5 className="font-medium text-gray-900">{work.title}</h5>
-                              <p className="text-sm text-gray-600">{work.company}</p>
-                              <p className="text-sm text-gray-500">{work.duration}</p>
-                              <p className="text-sm text-gray-700 mt-2">{work.description}</p>
-                            </div>
-                          </div>
-                        ))}
-                      </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Film className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No work history available</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Education */}
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Education</h4>
-                      <div className="space-y-4">
-                        {talent.education.map((edu) => (
-                          <div key={edu.id} className="p-4 border border-gray-200 rounded-lg">
-                            <h5 className="font-medium text-gray-900">{edu.degree}</h5>
-                            <p className="text-sm text-gray-600">{edu.institution}</p>
-                            <p className="text-sm text-gray-500">{edu.year}</p>
-                            <p className="text-sm text-gray-700 mt-2">{edu.description}</p>
-                          </div>
-                        ))}
-                      </div>
+                      {talent.education.length > 0 ? (
+                        <div className="space-y-4">
+                          {talent.education.map((edu) => (
+                            <div key={edu.id} className="p-4 border border-gray-200 rounded-lg">
+                              <h5 className="font-medium text-gray-900">{edu.degree}</h5>
+                              <p className="text-sm text-gray-600">{edu.institution}</p>
+                              <p className="text-sm text-gray-500">{edu.year}</p>
+                              <p className="text-sm text-gray-700 mt-2">{edu.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No education information available</p>
+                        </div>
+                      )}
                     </div>
 
                     {/* Certifications */}
                     <div>
                       <h4 className="text-lg font-semibold text-gray-900 mb-4">Certifications</h4>
-                      <div className="space-y-4">
-                        {talent.certifications.map((cert) => (
-                          <div key={cert.id} className="p-4 border border-gray-200 rounded-lg">
-                            <h5 className="font-medium text-gray-900">{cert.name}</h5>
-                            <p className="text-sm text-gray-600">{cert.issuer}</p>
-                            <p className="text-sm text-gray-500">{cert.year}</p>
-                            {cert.validUntil && (
-                              <p className="text-sm text-gray-500">Valid until: {cert.validUntil}</p>
-                            )}
-                          </div>
-                        ))}
-                      </div>
+                      {talent.certifications.length > 0 ? (
+                        <div className="space-y-4">
+                          {talent.certifications.map((cert) => (
+                            <div key={cert.id} className="p-4 border border-gray-200 rounded-lg">
+                              <h5 className="font-medium text-gray-900">{cert.name}</h5>
+                              <p className="text-sm text-gray-600">{cert.issuer}</p>
+                              <p className="text-sm text-gray-500">{cert.year}</p>
+                              {cert.validUntil && (
+                                <p className="text-sm text-gray-500">Valid until: {cert.validUntil}</p>
+                              )}
+                            </div>
+                          ))}
+                        </div>
+                      ) : (
+                        <div className="text-center py-8">
+                          <Award className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No certificates attached</p>
+                        </div>
+                      )}
                     </div>
                   </motion.div>
                 )}
@@ -742,7 +688,7 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                     </div>
 
                     {/* Social Links */}
-                    {Object.values(talent.socialLinks).some(link => link) && (
+                    {Object.values(talent.socialLinks).some(link => link) ? (
                       <div>
                         <h4 className="text-lg font-semibold text-gray-900 mb-4">Social Links</h4>
                         <div className="flex space-x-4">
@@ -778,6 +724,14 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                           )}
                         </div>
                       </div>
+                    ) : (
+                      <div>
+                        <h4 className="text-lg font-semibold text-gray-900 mb-4">Social Links</h4>
+                        <div className="text-center py-8">
+                          <AlertCircle className="w-12 h-12 text-gray-400 mx-auto mb-3" />
+                          <p className="text-gray-500">No social links attached</p>
+                        </div>
+                      </div>
                     )}
                   </motion.div>
                 )}
@@ -800,7 +754,7 @@ export default function TalentProfilePage({ params }: { params: { id: string } }
                 className="w-full btn-primary mb-3"
               >
                 <MessageCircle className="w-4 h-4 mr-2" />
-                Contact Emma
+                Contact {talent.name}
               </button>
               <button className="w-full btn-secondary">
                 <Download className="w-4 h-4 mr-2" />

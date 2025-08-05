@@ -1,4 +1,6 @@
 const User = require('../models/User');
+const Application = require('../models/Application');
+const mongoose = require('mongoose');
 
 // @desc    Get all approved talents
 // @route   GET /api/talents
@@ -13,6 +15,16 @@ const getTalents = async (req, res) => {
       page = 1,
       limit = 12
     } = req.query;
+
+    // Debug: Check all users first
+    const allUsers = await User.find({}).select('_id name email purpose userRole category location');
+    console.log('All users in database:', allUsers.length);
+    console.log('Sample users:', allUsers.slice(0, 3));
+
+    // Debug: Check applications
+    const allApplications = await Application.find({}).select('_id name email purpose userRole category location');
+    console.log('All applications in database:', allApplications.length);
+    console.log('Sample applications:', allApplications.slice(0, 3));
 
     // Build query for approved talents only
     let query = { 
@@ -45,6 +57,8 @@ const getTalents = async (req, res) => {
       ];
     }
 
+    console.log('Query for talents:', JSON.stringify(query, null, 2));
+
     // Calculate pagination
     const skip = (parseInt(page) - 1) * parseInt(limit);
 
@@ -54,6 +68,8 @@ const getTalents = async (req, res) => {
       .sort({ createdAt: -1 })
       .skip(skip)
       .limit(parseInt(limit));
+
+    console.log('Found talents:', talents.length);
 
     // Get total count for pagination
     const total = await User.countDocuments(query);
@@ -111,13 +127,35 @@ const getTalentById = async (req, res) => {
   try {
     const { id } = req.params;
 
-    const talent = await User.findById(id)
-      .select('name userRole category location experience skills languages bio profile_picture hasDisability disabilityType createdAt');
+    // Validate ObjectId
+    if (!mongoose.Types.ObjectId.isValid(id)) {
+      return res.status(400).json({
+        success: false,
+        message: 'Invalid talent ID format'
+      });
+    }
 
-    if (!talent || talent.purpose !== 'talent') {
+    console.log('Looking for talent with ID:', id);
+
+    const talent = await User.findById(id)
+      .select('name userRole category location experience skills languages bio profile_picture hasDisability disabilityType createdAt purpose');
+
+    console.log('Found talent:', talent ? 'Yes' : 'No');
+    if (talent) {
+      console.log('Talent purpose:', talent.purpose);
+    }
+
+    if (!talent) {
       return res.status(404).json({
         success: false,
         message: 'Talent not found'
+      });
+    }
+
+    if (talent.purpose !== 'talent') {
+      return res.status(404).json({
+        success: false,
+        message: 'Talent not found (not a talent user)'
       });
     }
 
@@ -205,9 +243,34 @@ const getTalentLocations = async (req, res) => {
   }
 };
 
+// @desc    Debug - Get all users for debugging
+// @route   GET /api/talents/debug/all
+// @access  Public
+const debugGetAllUsers = async (req, res) => {
+  try {
+    const allUsers = await User.find({}).select('_id name email purpose userRole category location');
+    
+    console.log('All users in database:', allUsers);
+    
+    res.json({
+      success: true,
+      data: allUsers
+    });
+
+  } catch (error) {
+    console.error('Error fetching all users:', error);
+    res.status(500).json({
+      success: false,
+      message: 'Failed to fetch users',
+      error: error.message
+    });
+  }
+};
+
 module.exports = {
   getTalents,
   getTalentById,
   getTalentCategories,
-  getTalentLocations
+  getTalentLocations,
+  debugGetAllUsers
 }; 

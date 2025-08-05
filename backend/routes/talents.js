@@ -3,7 +3,8 @@ const {
   getTalents, 
   getTalentById, 
   getTalentCategories, 
-  getTalentLocations 
+  getTalentLocations,
+  debugGetAllUsers
 } = require('../controllers/talentController');
 
 const router = express.Router();
@@ -12,11 +13,6 @@ const router = express.Router();
 // @route   GET /api/talents
 // @access  Public
 router.get('/', getTalents);
-
-// @desc    Get talent by ID
-// @route   GET /api/talents/:id
-// @access  Public
-router.get('/:id', getTalentById);
 
 // @desc    Get talent categories
 // @route   GET /api/talents/categories
@@ -27,5 +23,15 @@ router.get('/categories', getTalentCategories);
 // @route   GET /api/talents/locations
 // @access  Public
 router.get('/locations', getTalentLocations);
+
+// @desc    Debug - Get all users
+// @route   GET /api/talents/debug/all
+// @access  Public
+router.get('/debug/all', debugGetAllUsers);
+
+// @desc    Get talent by ID
+// @route   GET /api/talents/:id
+// @access  Public
+router.get('/:id', getTalentById);
 
 module.exports = router; 
