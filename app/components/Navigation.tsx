@@ -5,6 +5,7 @@ import Link from 'next/link'
 import { usePathname } from 'next/navigation'
 import { motion, AnimatePresence } from 'framer-motion'
 import { useSidebar } from './SidebarContext'
+import { useAuth } from '../contexts/AuthContext'
 import { 
   Home, 
   Search, 
@@ -167,6 +168,7 @@ export default function Navigation() {
   const pathname = usePathname()
   const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false)
   const { isDesktopMenuOpen, setIsDesktopMenuOpen } = useSidebar()
+  const { user, logout } = useAuth()
   const [expandedItems, setExpandedItems] = useState<string[]>([])
 
   const toggleExpanded = (itemName: string) => {
@@ -485,20 +487,46 @@ export default function Navigation() {
                 ))}
 
                 {/* Mobile User Section */}
-                <div className="pt-4 border-t border-gray-200">
-                  <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
-                    <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold">
-                      JD
+                {user ? (
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="flex items-center space-x-3 p-4 bg-gray-50 rounded-lg">
+                      <div className="w-10 h-10 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white font-semibold">
+                        {user.name.charAt(0).toUpperCase()}
+                      </div>
+                      <div className="flex-1">
+                        <p className="font-medium text-gray-900">{user.name}</p>
+                        <p className="text-sm text-gray-600">{user.purpose}</p>
+                      </div>
+                      <button 
+                        onClick={logout}
+                        className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100"
+                      >
+                        <LogOut className="w-4 h-4" />
+                      </button>
                     </div>
-                    <div className="flex-1">
-                      <p className="font-medium text-gray-900">John Doe</p>
-                      <p className="text-sm text-gray-600">Professional</p>
-                    </div>
-                    <button className="p-2 text-gray-400 hover:text-gray-600 rounded-lg hover:bg-gray-100">
-                      <LogOut className="w-4 h-4" />
-                    </button>
                   </div>
-                </div>
+                ) : (
+                  <div className="pt-4 border-t border-gray-200">
+                    <div className="space-y-2">
+                      <Link
+                        href="/login"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 text-gray-700 hover:bg-gray-50 rounded-lg transition-colors"
+                      >
+                        <User className="w-5 h-5 text-gray-400" />
+                        <span>Sign In</span>
+                      </Link>
+                      <Link
+                        href="/register"
+                        onClick={() => setIsMobileMenuOpen(false)}
+                        className="flex items-center space-x-3 px-4 py-3 bg-primary-500 text-white rounded-lg hover:bg-primary-600 transition-colors"
+                      >
+                        <UserPlus className="w-5 h-5" />
+                        <span>Sign Up</span>
+                      </Link>
+                    </div>
+                  </div>
+                )}
               </div>
             </motion.div>
           )}

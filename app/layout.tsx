@@ -5,6 +5,7 @@ import { Toaster } from 'react-hot-toast'
 import Navigation from './components/Navigation'
 import { SidebarProvider } from './components/SidebarContext'
 import LayoutWrapper from './components/LayoutWrapper'
+import { AuthProvider } from './contexts/AuthContext'
 
 const inter = Inter({ 
   subsets: ['latin'],
@@ -59,16 +60,18 @@ export default function RootLayout({
     <html lang="en" className={`${inter.variable} ${poppins.variable}`}>
 
       <body className={`${inter.className} antialiased`}>
-        <SidebarProvider>
-          <div id="root">
-            <Navigation />
-            <LayoutWrapper>
-              <main>
-                {children}
-              </main>
-            </LayoutWrapper>
-          </div>
-        </SidebarProvider>
+        <AuthProvider>
+          <SidebarProvider>
+            <div id="root">
+              <Navigation />
+              <LayoutWrapper>
+                <main>
+                  {children}
+                </main>
+              </LayoutWrapper>
+            </div>
+          </SidebarProvider>
+        </AuthProvider>
         <Toaster
           position="top-right"
           toastOptions={{

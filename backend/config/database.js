@@ -2,23 +2,21 @@ const mongoose = require('mongoose');
 
 const connectDB = async () => {
   try {
-    const mongoURI = process.env.MONGODB_URI || 'mongodb://localhost:27017/talent-directory';
+    const mongoURI = process.env.MONGODB_URI || 'mongodb://usha:ushausha@35.209.234.43:27017/admin';
     
-    // Only connect if MONGODB_URI is provided
-    if (!process.env.MONGODB_URI) {
-      console.log('MongoDB URI not provided, skipping database connection');
-      return;
-    }
-    
+    console.log('Connecting to MongoDB...');
     const conn = await mongoose.connect(mongoURI, {
       useNewUrlParser: true,
       useUnifiedTopology: true,
+      serverSelectionTimeoutMS: 30000,
+      socketTimeoutMS: 45000,
+      connectTimeoutMS: 30000,
     });
 
-    console.log(`MongoDB Connected: ${conn.connection.host}`);
+    console.log(`✅ MongoDB Connected: ${conn.connection.host}`);
+    console.log(`Database: ${conn.connection.db.databaseName}`);
   } catch (error) {
-    console.error('MongoDB connection error:', error);
-    // Don't exit process, just log the error
+    console.error('❌ MongoDB connection error:', error);
     console.log('Continuing without database connection...');
   }
 };

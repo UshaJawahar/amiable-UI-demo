@@ -24,6 +24,8 @@ import {
 import Link from 'next/link'
 import toast from 'react-hot-toast'
 import SocialMediaEmbed from '../components/SocialMediaEmbed'
+import { useAuth } from '../contexts/AuthContext'
+import { useRouter } from 'next/navigation'
 
 // Form schemas
 const baseSchema = z.object({
@@ -77,6 +79,8 @@ type TalentFormData = z.infer<typeof talentSchema>
 type ProfessionalFormData = z.infer<typeof professionalSchema>
 
 export default function RegisterPage() {
+  const { register } = useAuth()
+  const router = useRouter()
   const [purpose, setPurpose] = useState<'talent' | 'professional' | null>(null)
   const [step, setStep] = useState(1)
   const [showPassword, setShowPassword] = useState(false)
@@ -135,19 +139,47 @@ export default function RegisterPage() {
 
   const onSubmit = async (data: TalentFormData | ProfessionalFormData) => {
     try {
-      // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 2000))
+      // Prepare registration data
+      const registrationData = {
+        name: `${data.firstName} ${data.lastName}`,
+        email: data.email,
+        password: data.password,
+        purpose: data.purpose,
+        ...(data.purpose === 'talent' && {
+          userRole: data.role,
+          category: data.category,
+          languages: data.languages,
+          hasDisability: data.hasDisability,
+          disabilityType: data.disabilityType,
+          bio: data.bio,
+          socialMediaReels: data.socialMediaReels || [],
+        }),
+        ...(data.purpose === 'professional' && {
+          companyName: data.companyName,
+          companyType: data.companyType,
+          jobTitle: data.jobTitle,
+          industry: data.industry,
+          companySize: data.companySize,
+          website: data.website,
+          hiringNeeds: data.hiringNeeds,
+          projectTypes: data.projectTypes,
+        }),
+      }
       
-      toast.success('Registration successful! Please check your email for verification.')
+      const success = await register(registrationData)
       
-      // Reset forms and redirect
-      talentForm.reset()
-      professionalForm.reset()
-      setPurpose(null)
-      setStep(1)
-      setUploadedFiles({})
+      if (success) {
+        // Reset forms and redirect
+        talentForm.reset()
+        professionalForm.reset()
+        setPurpose(null)
+        setStep(1)
+        setUploadedFiles({})
+        router.push('/')
+      }
       
     } catch (error) {
+      console.error('Registration error:', error)
       toast.error('Registration failed. Please try again.')
     }
   }

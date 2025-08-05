@@ -11,7 +11,6 @@ const userSchema = new mongoose.Schema({
   email: {
     type: String,
     required: [true, 'Email is required'],
-    unique: true,
     trim: true,
     lowercase: true,
     match: [/^\w+([.-]?\w+)*@\w+([.-]?\w+)*(\.\w{2,3})+$/, 'Please enter a valid email']
@@ -27,6 +26,74 @@ const userSchema = new mongoose.Schema({
     enum: ['talent', 'client', 'admin'],
     default: 'talent'
   },
+  purpose: {
+    type: String,
+    enum: ['talent', 'professional'],
+    required: [true, 'Purpose is required']
+  },
+  userRole: {
+    type: String,
+    enum: ['production', 'acting'],
+    required: function() { return this.purpose === 'talent'; }
+  },
+  category: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'talent'; }
+  },
+  languages: [{
+    type: String,
+    trim: true
+  }],
+  hasDisability: {
+    type: Boolean,
+    default: false
+  },
+  disabilityType: {
+    type: String,
+    trim: true
+  },
+  disabilityCertificate: {
+    type: String, // Google Cloud Storage URL
+    default: null
+  },
+  companyName: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'professional'; }
+  },
+  companyType: {
+    type: String,
+    enum: ['film_studio', 'ott_platform', 'casting_agency', 'production_house', 'other'],
+    required: function() { return this.purpose === 'professional'; }
+  },
+  jobTitle: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'professional'; }
+  },
+  industry: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'professional'; }
+  },
+  companySize: {
+    type: String,
+    enum: ['1-10', '11-50', '51-200', '201-1000', '1000+'],
+    required: function() { return this.purpose === 'professional'; }
+  },
+  website: {
+    type: String,
+    trim: true
+  },
+  hiringNeeds: [{
+    type: String,
+    trim: true
+  }],
+  projectTypes: [{
+    type: String,
+    trim: true
+  }],
   profileImage: {
     type: String, // Google Cloud Storage URL
     default: null
@@ -71,6 +138,31 @@ const userSchema = new mongoose.Schema({
     twitter: String,
     website: String
   },
+  socialMediaReels: [{
+    id: {
+      type: String,
+      required: true
+    },
+    platform: {
+      type: String,
+      enum: ['instagram', 'facebook', 'youtube'],
+      required: true
+    },
+    url: {
+      type: String,
+      required: true,
+      match: [/^https?:\/\/.+/, 'Please enter a valid URL']
+    },
+    title: {
+      type: String,
+      required: true,
+      trim: true
+    },
+    description: {
+      type: String,
+      trim: true
+    }
+  }],
   isVerified: {
     type: Boolean,
     default: false
@@ -91,6 +183,9 @@ userSchema.index({
   skills: 'text', 
   bio: 'text' 
 });
+
+// Unique index for email
+userSchema.index({ email: 1 }, { unique: true });
 
 // Encrypt password before saving
 userSchema.pre('save', async function(next) {
