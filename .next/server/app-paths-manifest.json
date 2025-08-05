@@ -1,12 +1,6 @@
 {
-  "/_not-found": "app/_not-found.js",
-  "/admin/page": "app/admin/page.js",
-  "/explore/page": "app/explore/page.js",
-  "/messages/page": "app/messages/page.js",
-  "/analytics/page": "app/analytics/page.js",
-  "/notifications/page": "app/notifications/page.js",
   "/page": "app/page.js",
   "/projects/page": "app/projects/page.js",
-  "/register/page": "app/register/page.js",
-  "/talent/[id]/page": "app/talent/[id]/page.js"
+  "/explore/page": "app/explore/page.js",
+  "/register/page": "app/register/page.js"
 }

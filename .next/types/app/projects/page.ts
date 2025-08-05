@@ -1,4 +1,4 @@
-// File: E:\amiable\app\projects\page.tsx
+// File: E:\amiable-UI-demo\app\projects\page.tsx
 import * as entry from '../../../../app/projects/page.js'
 import type { ResolvingMetadata, ResolvingViewport } from 'next/dist/lib/metadata/types/metadata-interface.js'
 
