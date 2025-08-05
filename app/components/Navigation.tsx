@@ -10,7 +10,6 @@ import {
   Search, 
   UserPlus, 
   Users, 
-  MessageCircle, 
   Bell, 
   BarChart3,
   Settings,
@@ -98,13 +97,7 @@ const navigationItems: NavigationItem[] = [
       }
     ]
   },
-  {
-    name: 'Messages',
-    href: '/messages',
-    icon: <MessageCircle className="w-5 h-5" />,
-    description: 'Communicate with talents and professionals',
-    badge: '3'
-  },
+
   {
     name: 'Notifications',
     href: '/notifications',

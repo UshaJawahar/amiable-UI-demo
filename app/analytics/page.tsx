@@ -44,7 +44,6 @@ interface AnalyticsData {
     totalUsers: number
     totalProjects: number
     totalApplications: number
-    totalMessages: number
     activeUsers: number
     featuredProfiles: number
     verifiedUsers: number
@@ -97,7 +96,6 @@ export default function AnalyticsPage() {
         totalUsers: 1247,
         totalProjects: 89,
         totalApplications: 567,
-        totalMessages: 1234,
         activeUsers: 892,
         featuredProfiles: 45,
         verifiedUsers: 678,

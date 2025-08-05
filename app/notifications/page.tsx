@@ -7,7 +7,6 @@ import {
   CheckCircle, 
   AlertCircle, 
   Star, 
-  MessageCircle, 
   Eye, 
   Clock,
   Settings,
@@ -41,14 +40,14 @@ import toast from 'react-hot-toast'
 
 interface Notification {
   id: string
-  type: 'application' | 'message' | 'project' | 'system' | 'featured' | 'reminder'
+  type: 'application' | 'project' | 'system' | 'featured' | 'reminder'
   title: string
   message: string
   read: boolean
   timestamp: Date
   priority: 'low' | 'medium' | 'high'
   action?: {
-    type: 'view' | 'reply' | 'approve' | 'reject' | 'download'
+    type: 'view' | 'approve' | 'reject' | 'download'
     url: string
     label: string
   }
@@ -66,7 +65,6 @@ interface Notification {
   }
   metadata?: {
     applicationCount?: number
-    messageCount?: number
     projectViews?: number
     deadline?: Date
   }
@@ -78,7 +76,6 @@ interface NotificationSettings {
   sms: boolean
   types: {
     applications: boolean
-    messages: boolean
     projects: boolean
     system: boolean
     featured: boolean
@@ -101,7 +98,6 @@ export default function NotificationsPage() {
     sms: false,
     types: {
       applications: true,
-      messages: true,
       projects: true,
       system: true,
       featured: true,
@@ -151,32 +147,9 @@ export default function NotificationsPage() {
           applicationCount: 1
         }
       },
+
       {
         id: '2',
-        type: 'message',
-        title: 'New Message from Alex Rodriguez',
-        message: 'Hi! I wanted to follow up on the lighting position we discussed...',
-        read: false,
-        timestamp: new Date(Date.now() - 1000 * 60 * 60 * 2), // 2 hours ago
-        priority: 'medium',
-        action: {
-          type: 'reply',
-          url: '/messages',
-          label: 'Reply'
-        },
-        sender: {
-          id: 'alex',
-          name: 'Alex Rodriguez',
-          avatar: '/avatars/alex.jpg',
-          role: 'talent',
-          verified: true
-        },
-        metadata: {
-          messageCount: 1
-        }
-      },
-      {
-        id: '3',
         type: 'project',
         title: 'Project Status Updated',
         message: 'Your project "Netflix Drama Series" has received 15 new applications',
@@ -199,7 +172,7 @@ export default function NotificationsPage() {
         }
       },
       {
-        id: '4',
+        id: '3',
         type: 'featured',
         title: 'Profile Featured',
         message: 'Congratulations! Your profile has been featured on our platform homepage',
@@ -213,7 +186,7 @@ export default function NotificationsPage() {
         }
       },
       {
-        id: '5',
+        id: '4',
         type: 'reminder',
         title: 'Casting Deadline Reminder',
         message: 'The casting deadline for "Animated Feature Film" is approaching in 3 days',
@@ -235,7 +208,7 @@ export default function NotificationsPage() {
         }
       },
       {
-        id: '6',
+        id: '5',
         type: 'system',
         title: 'Platform Update',
         message: 'New features have been added to help you manage your projects more efficiently',
@@ -322,7 +295,6 @@ export default function NotificationsPage() {
   const getNotificationIcon = (type: Notification['type']) => {
     const iconMap: { [key: string]: React.ReactNode } = {
       'application': <User className="w-5 h-5" />,
-      'message': <MessageCircle className="w-5 h-5" />,
       'project': <Film className="w-5 h-5" />,
       'system': <Settings className="w-5 h-5" />,
       'featured': <Star className="w-5 h-5" />,
@@ -420,7 +392,6 @@ export default function NotificationsPage() {
                 <option value="all">All Notifications</option>
                 <option value="unread">Unread Only</option>
                 <option value="application">Applications</option>
-                <option value="message">Messages</option>
                 <option value="project">Projects</option>
                 <option value="system">System</option>
                 <option value="featured">Featured</option>
@@ -522,12 +493,7 @@ export default function NotificationsPage() {
                               <span>{notification.metadata.applicationCount} applications</span>
                             </div>
                           )}
-                          {notification.metadata.messageCount && (
-                            <div className="flex items-center space-x-1">
-                              <MessageCircle className="w-4 h-4" />
-                              <span>{notification.metadata.messageCount} messages</span>
-                            </div>
-                          )}
+
                           {notification.metadata.projectViews && (
                             <div className="flex items-center space-x-1">
                               <Eye className="w-4 h-4" />
@@ -680,7 +646,6 @@ export default function NotificationsPage() {
                           <p className="font-medium text-gray-900 capitalize">{type}</p>
                           <p className="text-sm text-gray-600">
                             {type === 'applications' && 'New job applications'}
-                            {type === 'messages' && 'New messages from talent/professionals'}
                             {type === 'projects' && 'Project updates and status changes'}
                             {type === 'system' && 'Platform updates and announcements'}
                             {type === 'featured' && 'Profile featured notifications'}
