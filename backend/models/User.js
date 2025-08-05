@@ -21,6 +21,10 @@ const userSchema = new mongoose.Schema({
     minlength: [6, 'Password must be at least 6 characters'],
     select: false
   },
+  phone: {
+    type: String,
+    trim: true
+  },
   role: {
     type: String,
     enum: ['talent', 'client', 'admin'],
@@ -41,10 +45,24 @@ const userSchema = new mongoose.Schema({
     trim: true,
     required: function() { return this.purpose === 'talent'; }
   },
+  experience: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'talent'; }
+  },
+  skills: [{
+    type: String,
+    trim: true
+  }],
   languages: [{
     type: String,
     trim: true
   }],
+  location: {
+    type: String,
+    trim: true,
+    required: function() { return this.purpose === 'talent'; }
+  },
   hasDisability: {
     type: Boolean,
     default: false
@@ -101,18 +119,6 @@ const userSchema = new mongoose.Schema({
   bio: {
     type: String,
     maxlength: [500, 'Bio cannot be more than 500 characters']
-  },
-  skills: [{
-    type: String,
-    trim: true
-  }],
-  experience: {
-    type: Number,
-    min: [0, 'Experience cannot be negative']
-  },
-  location: {
-    type: String,
-    trim: true
   },
   hourlyRate: {
     type: Number,

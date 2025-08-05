@@ -87,7 +87,19 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       }
     } catch (error: any) {
       console.error('Registration error:', error)
-      toast.error(error.message || 'Registration failed')
+      
+      // Handle validation errors
+      if (error.response?.data?.errors) {
+        const validationErrors = error.response.data.errors
+        Object.values(validationErrors).forEach((message: any) => {
+          toast.error(message)
+        })
+        return false
+      }
+      
+      // Handle other errors
+      const errorMessage = error.response?.data?.message || error.message || 'Registration failed'
+      toast.error(errorMessage)
       return false
     } finally {
       setLoading(false)

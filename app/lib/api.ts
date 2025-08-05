@@ -147,12 +147,25 @@ export interface RegisterData {
   email: string;
   password: string;
   purpose: 'talent' | 'professional';
+  phone?: string;
+  role?: 'production' | 'acting';
   userRole?: 'production' | 'acting';
   category?: string;
+  experience?: string;
+  skills?: string[];
   languages?: string[];
+  location?: string;
   hasDisability?: boolean;
   disabilityType?: string;
+  disabilityCertificate?: any;
   bio?: string;
+  socialMediaReels?: Array<{
+    id: string;
+    platform: 'instagram' | 'facebook' | 'youtube';
+    url: string;
+    title: string;
+    description?: string;
+  }>;
   companyName?: string;
   companyType?: 'film_studio' | 'ott_platform' | 'casting_agency' | 'production_house' | 'other';
   jobTitle?: string;
@@ -205,7 +218,10 @@ class ApiService {
       const data = await response.json();
 
       if (!response.ok) {
-        throw new Error(data.message || 'API request failed');
+        // Create an error object that includes the response data
+        const error = new Error(data.message || 'API request failed');
+        (error as any).response = { data };
+        throw error;
       }
 
       return data;

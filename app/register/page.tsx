@@ -126,6 +126,13 @@ export default function RegisterPage() {
   const handlePurposeSelection = (selectedPurpose: 'talent' | 'professional') => {
     setPurpose(selectedPurpose)
     setStep(2)
+    
+    // Set the purpose field in the appropriate form
+    if (selectedPurpose === 'talent') {
+      talentForm.setValue('purpose', 'talent')
+    } else {
+      professionalForm.setValue('purpose', 'professional')
+    }
   }
 
   const handleFileUpload = (field: 'certificate', files: FileList | null) => {
