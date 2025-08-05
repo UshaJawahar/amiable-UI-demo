@@ -352,10 +352,14 @@ class ApiService {
 
   // Application methods
   async createApplication(data: Omit<Application, '_id' | 'createdAt' | 'updatedAt'>): Promise<Application> {
-    return this.request<Application>('/applications', {
+    const response = await this.request<Application>('/applications', {
       method: 'POST',
       body: JSON.stringify(data),
     });
+    if (!response.data) {
+      throw new Error('Application data not found');
+    }
+    return response.data;
   }
 
   async getApplications(params?: {
@@ -371,14 +375,19 @@ class ApiService {
       });
     }
 
-    return this.request<{ applications: Application[]; total: number }>(`/applications?${queryParams}`);
+    const response = await this.request<{ applications: Application[]; total: number }>(`/applications?${queryParams}`);
+    return response.data || { applications: [], total: 0 };
   }
 
   async updateApplication(id: string, data: Partial<Application>): Promise<Application> {
-    return this.request<Application>(`/applications/${id}`, {
+    const response = await this.request<Application>(`/applications/${id}`, {
       method: 'PUT',
       body: JSON.stringify(data),
     });
+    if (!response.data) {
+      throw new Error('Application data not found');
+    }
+    return response.data;
   }
 
   // Notification methods
@@ -395,17 +404,22 @@ class ApiService {
       });
     }
 
-    return this.request<{ notifications: Notification[]; total: number }>(`/notifications?${queryParams}`);
+    const response = await this.request<{ notifications: Notification[]; total: number }>(`/notifications?${queryParams}`);
+    return response.data || { notifications: [], total: 0 };
   }
 
   async markNotificationAsRead(id: string): Promise<Notification> {
-    return this.request<Notification>(`/notifications/${id}/read`, {
+    const response = await this.request<Notification>(`/notifications/${id}/read`, {
       method: 'PUT',
     });
+    if (!response.data) {
+      throw new Error('Notification data not found');
+    }
+    return response.data;
   }
 
   async markAllNotificationsAsRead(): Promise<void> {
-    return this.request<void>('/notifications/read-all', {
+    await this.request<void>('/notifications/read-all', {
       method: 'PUT',
     });
   }
@@ -416,23 +430,29 @@ class ApiService {
     formData.append('file', file);
     formData.append('purpose', purpose);
 
-    return this.request<{ url: string; filename: string }>('/upload/single', {
+    const response = await this.request<{ url: string; filename: string }>('/upload/single', {
       method: 'POST',
       headers: {
         // Don't set Content-Type for FormData
       },
       body: formData,
     });
+    if (!response.data) {
+      throw new Error('Upload data not found');
+    }
+    return response.data;
   }
 
   // Analytics methods
   async getAnalytics(): Promise<any> {
-    return this.request<any>('/analytics');
+    const response = await this.request<any>('/analytics');
+    return response.data || {};
   }
 
   // Health check
   async healthCheck(): Promise<{ success: boolean; message: string }> {
-    return this.request<{ success: boolean; message: string }>('/health');
+    const response = await this.request<{ success: boolean; message: string }>('/health');
+    return response.data || { success: false, message: 'Health check failed' };
   }
 }
 
@@ -440,4 +460,4 @@ class ApiService {
 export const api = new ApiService();
 
 // Export types
-export type { ApiResponse, AuthResponse }; 
+export type { ApiResponse }; 
