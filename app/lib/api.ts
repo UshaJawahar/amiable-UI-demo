@@ -148,6 +148,8 @@ export interface RegisterData {
   password: string;
   purpose: 'talent' | 'professional';
   phone?: string;
+  profileImage?: string; // Added profileImage
+  profile_picture?: string; // Added profile_picture
   role?: 'production' | 'acting';
   userRole?: 'production' | 'acting';
   category?: string;
@@ -238,12 +240,7 @@ class ApiService {
       body: JSON.stringify(data),
     });
 
-    if (response.success && response.data?.token) {
-      this.token = response.data.token;
-      localStorage.setItem('token', response.data.token);
-    }
-
-    return response.data || { success: response.success, message: response.message };
+    return { success: response.success, message: response.message };
   }
 
   async login(data: LoginData): Promise<AuthResponse> {
@@ -474,6 +471,86 @@ class ApiService {
 
 // Create and export a singleton instance
 export const api = new ApiService();
+
+// Talent API methods
+export const getTalents = async (params?: {
+  role?: string;
+  category?: string;
+  location?: string;
+  search?: string;
+  page?: number;
+  limit?: number;
+}): Promise<ApiResponse<any>> => {
+  try {
+    const queryParams = new URLSearchParams();
+    if (params?.role) queryParams.append('role', params.role);
+    if (params?.category) queryParams.append('category', params.category);
+    if (params?.location) queryParams.append('location', params.location);
+    if (params?.search) queryParams.append('search', params.search);
+    if (params?.page) queryParams.append('page', params.page.toString());
+    if (params?.limit) queryParams.append('limit', params.limit.toString());
+
+    const response = await fetch(`${API_BASE_URL}/talents?${queryParams.toString()}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch talents');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching talents:', error);
+    throw error;
+  }
+};
+
+export const getTalentById = async (id: string): Promise<ApiResponse<any>> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/talents/${id}`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch talent');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching talent:', error);
+    throw error;
+  }
+};
+
+export const getTalentCategories = async (): Promise<ApiResponse<string[]>> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/talents/categories`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch categories');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching categories:', error);
+    throw error;
+  }
+};
+
+export const getTalentLocations = async (): Promise<ApiResponse<string[]>> => {
+  try {
+    const response = await fetch(`${API_BASE_URL}/talents/locations`);
+    const data = await response.json();
+
+    if (!response.ok) {
+      throw new Error(data.message || 'Failed to fetch locations');
+    }
+
+    return data;
+  } catch (error) {
+    console.error('Error fetching locations:', error);
+    throw error;
+  }
+};
 
 // Export types
 export type { ApiResponse }; 

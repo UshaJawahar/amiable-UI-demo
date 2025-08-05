@@ -35,6 +35,8 @@ const register = async (req, res) => {
       password, 
       purpose,
       phone,
+      profileImage, // Added profileImage
+      profile_picture, // Added profile_picture
       role,
       userRole,
       category,
@@ -82,6 +84,8 @@ const register = async (req, res) => {
       password,
       purpose,
       phone,
+      profileImage, // Added profileImage
+      profile_picture, // Added profile_picture
       ...(purpose === 'talent' && {
         userRole: role || userRole, // Handle both role and userRole
         category,
@@ -351,7 +355,7 @@ const getAdminMe = async (req, res) => {
       });
     }
 
-    const admin = await Admin.findById(req.user.id);
+    const admin = await Admin.findById(req.admin.id);
     if (!admin) {
       return res.status(404).json({
         success: false,

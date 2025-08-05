@@ -24,6 +24,7 @@ import Link from 'next/link'
 import toast from 'react-hot-toast'
 import AdvancedSearch from '../components/AdvancedSearch'
 import ContactTalent from '../components/ContactTalent'
+import { getTalents, getTalentCategories, getTalentLocations } from '../lib/api'
 
 interface Talent {
   id: string
@@ -35,10 +36,13 @@ interface Talent {
   rating: number
   featured: boolean
   verified: boolean
-  avatar: string
+  avatar: string | null
   skills: string[]
   languages: string[]
   availability: string
+  bio?: string
+  hasDisability?: boolean
+  disabilityType?: string
   portfolio: {
     videos: string[]
     images: string[]
@@ -57,174 +61,64 @@ export default function ExplorePage() {
   const [loading, setLoading] = useState(true)
   const [contactTalent, setContactTalent] = useState<Talent | null>(null)
   const [showContactModal, setShowContactModal] = useState(false)
+  const [categories, setCategories] = useState<string[]>([])
+  const [locations, setLocations] = useState<string[]>([])
 
-  // Mock data - in real app this would come from API
+  // Fetch talents from API
   useEffect(() => {
-    const mockTalents: Talent[] = [
-      {
-        id: '1',
-        name: 'Alex Rodriguez',
-        role: 'production',
-        category: 'Lighting',
-        location: 'Los Angeles, CA',
-        experience: '5+ years',
-        rating: 4.8,
-        featured: true,
-        verified: true,
-        avatar: '/avatars/alex.jpg',
-        skills: ['LED Lighting', 'Color Theory', 'Equipment Setup'],
-        languages: ['English', 'Spanish'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/alex-video1.mp4'],
-          images: ['/portfolio/alex-work1.jpg'],
-          documents: ['/portfolio/alex-resume.pdf']
+    const fetchTalents = async () => {
+      try {
+        setLoading(true)
+        
+        // Fetch talents with current filters
+        const params: any = {}
+        if (selectedRole !== 'all') params.role = selectedRole
+        if (selectedCategory !== 'all') params.category = selectedCategory
+        if (selectedLocation !== 'all') params.location = selectedLocation
+        if (searchTerm) params.search = searchTerm
+
+        const response = await getTalents(params)
+        
+        if (response.success) {
+          setTalents(response.data)
+          setFilteredTalents(response.data)
+        } else {
+          toast.error('Failed to fetch talents')
         }
-      },
-      {
-        id: '2',
-        name: 'Emma Thompson',
-        role: 'acting',
-        category: 'Drama',
-        location: 'New York, NY',
-        experience: '3+ years',
-        rating: 4.9,
-        featured: true,
-        verified: true,
-        avatar: '/avatars/emma.jpg',
-        skills: ['Method Acting', 'Voice Training', 'Stage Combat'],
-        languages: ['English', 'French'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/emma-audition.mp4'],
-          images: ['/portfolio/emma-headshot.jpg'],
-          documents: ['/portfolio/emma-resume.pdf']
-        }
-      },
-      {
-        id: '3',
-        name: 'David Kim',
-        role: 'production',
-        category: 'Sound Design',
-        location: 'Austin, TX',
-        experience: '7+ years',
-        rating: 4.7,
-        featured: false,
-        verified: true,
-        avatar: '/avatars/david.jpg',
-        skills: ['Audio Mixing', 'Foley', 'Sound Effects'],
-        languages: ['English', 'Korean'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/david-demo.mp4'],
-          images: ['/portfolio/david-studio.jpg'],
-          documents: ['/portfolio/david-resume.pdf']
-        }
-      },
-      {
-        id: '4',
-        name: 'Maria Garcia',
-        role: 'acting',
-        category: 'Comedy',
-        location: 'Miami, FL',
-        experience: '4+ years',
-        rating: 4.6,
-        featured: false,
-        verified: true,
-        avatar: '/avatars/maria.jpg',
-        skills: ['Improv', 'Comedy Writing', 'Character Development'],
-        languages: ['English', 'Spanish'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/maria-comedy.mp4'],
-          images: ['/portfolio/maria-headshot.jpg'],
-          documents: ['/portfolio/maria-resume.pdf']
-        }
-      },
-      {
-        id: '5',
-        name: 'James Wilson',
-        role: 'production',
-        category: 'Camera Operation',
-        location: 'Atlanta, GA',
-        experience: '6+ years',
-        rating: 4.5,
-        featured: false,
-        verified: true,
-        avatar: '/avatars/james.jpg',
-        skills: ['Cinematography', 'Camera Movement', 'Equipment Maintenance'],
-        languages: ['English'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/james-reel.mp4'],
-          images: ['/portfolio/james-work.jpg'],
-          documents: ['/portfolio/james-resume.pdf']
-        }
-      },
-      {
-        id: '6',
-        name: 'Sarah Chen',
-        role: 'acting',
-        category: 'Voice Acting',
-        location: 'San Francisco, CA',
-        experience: '8+ years',
-        rating: 4.9,
-        featured: true,
-        verified: true,
-        avatar: '/avatars/sarah.jpg',
-        skills: ['Voice Acting', 'Accent Training', 'Character Voices'],
-        languages: ['English', 'Mandarin', 'Japanese'],
-        availability: 'Available',
-        portfolio: {
-          videos: ['/portfolio/sarah-voice-demo.mp4'],
-          images: ['/portfolio/sarah-studio.jpg'],
-          documents: ['/portfolio/sarah-resume.pdf']
-        }
+      } catch (error) {
+        console.error('Error fetching talents:', error)
+        toast.error('Failed to load talents')
+      } finally {
+        setLoading(false)
       }
-    ]
+    }
 
-    setTalents(mockTalents)
-    setFilteredTalents(mockTalents)
-    setLoading(false)
-  }, [])
+    fetchTalents()
+  }, [selectedRole, selectedCategory, selectedLocation, searchTerm])
 
-  // Filter talents based on search and filters
+  // Fetch categories and locations
   useEffect(() => {
-    let filtered = talents
+    const fetchFilters = async () => {
+      try {
+        const [categoriesResponse, locationsResponse] = await Promise.all([
+          getTalentCategories(),
+          getTalentLocations()
+        ])
 
-    // Search filter
-    if (searchTerm) {
-      filtered = filtered.filter(talent =>
-        talent.name.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        talent.category.toLowerCase().includes(searchTerm.toLowerCase()) ||
-        talent.skills.some(skill => skill.toLowerCase().includes(searchTerm.toLowerCase()))
-      )
+        if (categoriesResponse.success) {
+          setCategories(categoriesResponse.data)
+        }
+
+        if (locationsResponse.success) {
+          setLocations(locationsResponse.data)
+        }
+      } catch (error) {
+        console.error('Error fetching filters:', error)
+      }
     }
 
-    // Role filter
-    if (selectedRole !== 'all') {
-      filtered = filtered.filter(talent => talent.role === selectedRole)
-    }
-
-    // Category filter
-    if (selectedCategory !== 'all') {
-      filtered = filtered.filter(talent => talent.category === selectedCategory)
-    }
-
-    // Location filter
-    if (selectedLocation !== 'all') {
-      filtered = filtered.filter(talent => talent.location.includes(selectedLocation))
-    }
-
-    setFilteredTalents(filtered)
-  }, [talents, searchTerm, selectedRole, selectedCategory, selectedLocation])
-
-  const categories = {
-    production: ['Lighting', 'Sound Design', 'Camera Operation', 'Set Design', 'Costume Design', 'Makeup', 'Editing'],
-    acting: ['Drama', 'Comedy', 'Voice Acting', 'Commercial', 'Theater', 'Film', 'Television']
-  }
-
-  const locations = ['Los Angeles, CA', 'New York, NY', 'Austin, TX', 'Miami, FL', 'Atlanta, GA', 'San Francisco, CA']
+    fetchFilters()
+  }, [])
 
   const renderStars = (rating: number) => {
     return Array.from({ length: 5 }, (_, i) => (
@@ -328,8 +222,21 @@ export default function ExplorePage() {
 
                 {/* Avatar and Basic Info */}
                 <div className="relative mb-4">
-                  <div className="w-full h-48 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-lg flex items-center justify-center">
-                    <div className="w-20 h-20 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-2xl font-bold">
+                  <div className="w-full h-48 bg-gradient-to-br from-primary-100 to-secondary-100 rounded-lg flex items-center justify-center overflow-hidden">
+                    {talent.avatar ? (
+                      <img 
+                        src={talent.avatar} 
+                        alt={talent.name}
+                        className="w-full h-full object-cover"
+                        onError={(e) => {
+                          // Fallback to initials if image fails to load
+                          const target = e.target as HTMLImageElement;
+                          target.style.display = 'none';
+                          target.nextElementSibling?.classList.remove('hidden');
+                        }}
+                      />
+                    ) : null}
+                    <div className={`w-20 h-20 bg-gradient-to-r from-primary-500 to-secondary-500 rounded-full flex items-center justify-center text-white text-2xl font-bold ${talent.avatar ? 'hidden' : ''}`}>
                       {talent.name.charAt(0)}
                     </div>
                   </div>
@@ -370,6 +277,13 @@ export default function ExplorePage() {
                   <div className="text-sm text-gray-600">
                     <span className="font-medium">Experience:</span> {talent.experience}
                   </div>
+
+                  {/* Bio */}
+                  {talent.bio && (
+                    <div className="text-sm text-gray-600">
+                      <span className="font-medium">Bio:</span> {talent.bio.length > 100 ? `${talent.bio.substring(0, 100)}...` : talent.bio}
+                    </div>
+                  )}
 
                   {/* Skills */}
                   <div>

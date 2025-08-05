@@ -12,6 +12,8 @@ const connectDB = require('./config/database');
 // Import routes
 const authRoutes = require('./routes/auth');
 const uploadRoutes = require('./routes/upload');
+const adminRoutes = require('./routes/admin');
+const talentRoutes = require('./routes/talents');
 
 // Initialize express
 const app = express();
@@ -103,6 +105,8 @@ app.get('/api/test', (req, res) => {
 // Mount routes
 app.use('/api/auth', authRoutes);
 app.use('/api/upload', uploadRoutes);
+app.use('/api/admin', adminRoutes);
+app.use('/api/talents', talentRoutes);
 
 // Error handling middleware
 app.use((err, req, res, next) => {

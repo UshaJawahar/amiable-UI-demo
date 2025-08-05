@@ -35,6 +35,7 @@ const baseSchema = z.object({
   firstName: z.string().min(2, 'First name must be at least 2 characters'),
   lastName: z.string().min(2, 'Last name must be at least 2 characters'),
   phone: z.string().min(10, 'Please enter a valid phone number'),
+  profileImage: z.any().optional(),
   agreeToTerms: z.boolean().refine(val => val === true, 'You must agree to the terms and conditions'),
 })
 
@@ -88,6 +89,7 @@ export default function RegisterPage() {
   const [hasDisability, setHasDisability] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<{
     certificate?: File
+    profileImage?: File
   }>({})
 
   const talentForm = useForm<TalentFormData>({
@@ -135,27 +137,82 @@ export default function RegisterPage() {
     }
   }
 
-  const handleFileUpload = (field: 'certificate', files: FileList | null) => {
+  const handleFileUpload = (field: 'certificate' | 'profileImage', files: FileList | null) => {
     if (!files) return
 
+    const file = files[0]
+    
+    // Validate file size (500KB)
+    const maxSize = 512000 // 500KB in bytes
+    if (file.size > maxSize) {
+      toast.error('File size must be less than 500KB')
+      return
+    }
+
+    // Validate file type
+    const allowedTypes = ['image/jpeg', 'image/jpg', 'image/png', 'image/gif']
+    if (!allowedTypes.includes(file.type)) {
+      toast.error('Only image files (JPEG, JPG, PNG, GIF) are allowed')
+      return
+    }
+
     if (field === 'certificate') {
-      setUploadedFiles(prev => ({ ...prev, certificate: files[0] }))
-      talentForm.setValue('disabilityCertificate', files[0])
+      setUploadedFiles(prev => ({ ...prev, certificate: file }))
+      talentForm.setValue('disabilityCertificate', file)
+    } else if (field === 'profileImage') {
+      setUploadedFiles(prev => ({ ...prev, profileImage: file }))
+      talentForm.setValue('profileImage', file)
+      professionalForm.setValue('profileImage', file)
     }
   }
 
   const onSubmit = async (data: TalentFormData | ProfessionalFormData) => {
     try {
+      let profile_picture = null;
+
+      // Upload profile image if provided
+      if (uploadedFiles.profileImage) {
+        const formData = new FormData();
+        formData.append('profileImage', uploadedFiles.profileImage);
+
+        try {
+          const uploadResponse = await fetch('http://localhost:5000/api/upload/profile-image', {
+            method: 'POST',
+            body: formData,
+          });
+
+          if (uploadResponse.ok) {
+            const uploadResult = await uploadResponse.json();
+            profile_picture = uploadResult.profile_picture;
+            console.log('Profile image uploaded:', uploadResult);
+          } else {
+            const errorData = await uploadResponse.json();
+            toast.error(errorData.message || 'Failed to upload profile image');
+            return;
+          }
+        } catch (uploadError) {
+          console.error('Upload error:', uploadError);
+          toast.error('Failed to upload profile image');
+          return;
+        }
+      }
+
       // Prepare registration data
       const registrationData = {
         name: `${data.firstName} ${data.lastName}`,
         email: data.email,
         password: data.password,
+        phone: data.phone,
         purpose: data.purpose,
+        profileImage: null, // Keep for backward compatibility
+        profile_picture: profile_picture, // Added profile_picture
         ...(data.purpose === 'talent' && {
           userRole: data.role,
           category: data.category,
+          experience: data.experience,
+          skills: data.skills,
           languages: data.languages,
+          location: data.location,
           hasDisability: data.hasDisability,
           disabilityType: data.disabilityType,
           bio: data.bio,
@@ -182,7 +239,7 @@ export default function RegisterPage() {
         setPurpose(null)
         setStep(1)
         setUploadedFiles({})
-        router.push('/')
+        router.push('/register/success')
       }
       
     } catch (error) {
@@ -405,6 +462,35 @@ export default function RegisterPage() {
                 <p className="text-error-600 text-sm mt-1">{talentForm.formState.errors.confirmPassword.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Profile Image (Optional)</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">
+                Upload your profile picture (Max 500KB, JPEG, PNG, GIF)
+              </p>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                onChange={(e) => handleFileUpload('profileImage', e.target.files)}
+                className="hidden"
+                id="profile-image-upload"
+              />
+              <label
+                htmlFor="profile-image-upload"
+                className="btn-secondary cursor-pointer inline-flex"
+              >
+                Choose Image
+              </label>
+            </div>
+            {uploadedFiles.profileImage && (
+              <div className="mt-2 flex items-center text-sm text-success-600">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                {uploadedFiles.profileImage.name}
+              </div>
+            )}
           </div>
         </div>
 
@@ -849,6 +935,35 @@ export default function RegisterPage() {
                 <p className="text-error-600 text-sm mt-1">{professionalForm.formState.errors.confirmPassword.message}</p>
               )}
             </div>
+          </div>
+
+          <div className="mt-4">
+            <label className="block text-sm font-medium text-gray-700 mb-2">Profile Image (Optional)</label>
+            <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
+              <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
+              <p className="text-sm text-gray-600 mb-2">
+                Upload your profile picture (Max 500KB, JPEG, PNG, GIF)
+              </p>
+              <input
+                type="file"
+                accept="image/jpeg,image/jpg,image/png,image/gif"
+                onChange={(e) => handleFileUpload('profileImage', e.target.files)}
+                className="hidden"
+                id="profile-image-upload-professional"
+              />
+              <label
+                htmlFor="profile-image-upload-professional"
+                className="btn-secondary cursor-pointer inline-flex"
+              >
+                Choose Image
+              </label>
+            </div>
+            {uploadedFiles.profileImage && (
+              <div className="mt-2 flex items-center text-sm text-success-600">
+                <CheckCircle className="w-4 h-4 mr-1" />
+                {uploadedFiles.profileImage.name}
+              </div>
+            )}
           </div>
         </div>
 

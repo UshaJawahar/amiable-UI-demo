@@ -77,9 +77,8 @@ export const AuthProvider: React.FC<AuthProviderProps> = ({ children }) => {
       setLoading(true)
       const response = await api.register(data)
       
-      if (response.success && response.user) {
-        setUser(response.user)
-        toast.success('Registration successful!')
+      if (response.success) {
+        toast.success(response.message || 'Application submitted successfully! Please wait for admin approval.')
         return true
       } else {
         toast.error(response.message || 'Registration failed')

@@ -72,6 +72,14 @@ const applicationSchema = new mongoose.Schema({
     type: String, // Google Cloud Storage URL
     default: null
   },
+  profileImage: {
+    type: String, // Google Cloud Storage URL
+    default: null
+  },
+  profile_picture: {
+    type: String, // Base64 encoded image data
+    default: null
+  },
   bio: {
     type: String,
     maxlength: [500, 'Bio cannot be more than 500 characters']

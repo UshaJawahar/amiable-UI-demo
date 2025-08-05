@@ -1,0 +1,14 @@
+# Database
+MONGODB_URI=mongodb://usha:ushausha@35.209.234.43:27017/admin
+
+# JWT
+JWT_SECRET=amiable-super-secret-jwt-key-2024
+JWT_EXPIRE=30d
+
+# Email Configuration (PRODUCTION)
+EMAIL_USER=usha.j@yaaralabs.ai
+EMAIL_PASSWORD=aohi azun osza gzwn
+EMAIL_FROM=usha.j@yaaralabs.ai
+
+# Environment
+NODE_ENV=production 
