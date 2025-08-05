@@ -10,7 +10,7 @@ import {
   User, 
   Building, 
   FileText, 
-  Upload, 
+  Upload,
   Eye, 
   EyeOff,
   CheckCircle,
@@ -48,18 +48,13 @@ const talentSchema = baseSchema.extend({
   disabilityType: z.string().optional(),
   disabilityCertificate: z.any().optional(),
   bio: z.string().min(50, 'Bio must be at least 50 characters'),
-  portfolio: z.object({
-    videos: z.array(z.any()).optional(),
-    images: z.array(z.any()).optional(),
-    documents: z.array(z.any()).optional(),
-    socialMediaReels: z.array(z.object({
-      id: z.string(),
-      platform: z.enum(['instagram', 'facebook', 'youtube']),
-      url: z.string().url(),
-      title: z.string(),
-      description: z.string().optional(),
-    })).optional(),
-  }),
+  socialMediaReels: z.array(z.object({
+    id: z.string(),
+    platform: z.enum(['instagram', 'facebook', 'youtube']),
+    url: z.string().url(),
+    title: z.string(),
+    description: z.string().optional(),
+  })).optional(),
 })
 
 const professionalSchema = baseSchema.extend({
@@ -89,7 +84,6 @@ export default function RegisterPage() {
   const [hasDisability, setHasDisability] = useState(false)
   const [uploadedFiles, setUploadedFiles] = useState<{
     certificate?: File
-    portfolio?: File[]
   }>({})
 
   const talentForm = useForm<TalentFormData>({
@@ -104,12 +98,7 @@ export default function RegisterPage() {
       location: '',
       hasDisability: false,
       bio: '',
-      portfolio: {
-        videos: [],
-        images: [],
-        documents: [],
-        socialMediaReels: [],
-      },
+      socialMediaReels: [],
     },
   })
 
@@ -135,16 +124,12 @@ export default function RegisterPage() {
     setStep(2)
   }
 
-  const handleFileUpload = (field: 'certificate' | 'portfolio', files: FileList | null) => {
+  const handleFileUpload = (field: 'certificate', files: FileList | null) => {
     if (!files) return
 
     if (field === 'certificate') {
       setUploadedFiles(prev => ({ ...prev, certificate: files[0] }))
       talentForm.setValue('disabilityCertificate', files[0])
-    } else {
-      const fileArray = Array.from(files)
-      setUploadedFiles(prev => ({ ...prev, portfolio: fileArray }))
-      talentForm.setValue('portfolio.documents', fileArray)
     }
   }
 
@@ -571,6 +556,21 @@ export default function RegisterPage() {
           </div>
         </div>
 
+        {/* Social Media Links */}
+        <div className="card">
+          <h3 className="text-xl font-semibold text-gray-900 mb-4">Social Media Links (Optional)</h3>
+          <p className="text-gray-600 mb-4">
+            Add links to your social media profiles and reels to showcase your work
+          </p>
+          
+          <SocialMediaEmbed
+            reels={talentForm.watch('socialMediaReels') || []}
+            onReelsChange={(reels) => talentForm.setValue('socialMediaReels', reels)}
+            isEditable={true}
+            maxReels={5}
+          />
+        </div>
+
         {/* Disability Information */}
         <div className="card">
           <h3 className="text-xl font-semibold text-gray-900 mb-4">Accessibility Information</h3>
@@ -644,57 +644,7 @@ export default function RegisterPage() {
           )}
         </div>
 
-        {/* Portfolio Upload */}
-        <div className="card">
-          <h3 className="text-xl font-semibold text-gray-900 mb-4">Portfolio (Optional)</h3>
-          <p className="text-gray-600 mb-4">
-            Upload samples of your work to showcase your skills and experience
-          </p>
-          
-          <div className="border-2 border-dashed border-gray-300 rounded-lg p-6 text-center">
-            <Upload className="w-8 h-8 text-gray-400 mx-auto mb-2" />
-            <p className="text-sm text-gray-600 mb-2">
-              Upload videos, images, or documents (Max 10 files, 50MB total)
-            </p>
-            <input
-              type="file"
-              multiple
-              accept=".pdf,.jpg,.jpeg,.png,.mp4,.mov,.avi"
-              onChange={(e) => handleFileUpload('portfolio', e.target.files)}
-              className="hidden"
-              id="portfolio-upload"
-            />
-            <label
-              htmlFor="portfolio-upload"
-              className="btn-secondary cursor-pointer inline-flex"
-            >
-              Choose Files
-            </label>
-          </div>
-          {uploadedFiles.portfolio && uploadedFiles.portfolio.length > 0 && (
-            <div className="mt-4">
-              <h4 className="text-sm font-medium text-gray-700 mb-2">Uploaded Files:</h4>
-              <div className="space-y-1">
-                {uploadedFiles.portfolio.map((file, index) => (
-                  <div key={index} className="flex items-center text-sm text-success-600">
-                    <CheckCircle className="w-4 h-4 mr-1" />
-                    {file.name}
-                  </div>
-                ))}
-              </div>
-            </div>
-          )}
-        </div>
 
-        {/* Social Media Reels */}
-        <div className="card">
-          <SocialMediaEmbed
-            reels={talentForm.watch('portfolio.socialMediaReels') || []}
-            onReelsChange={(reels) => talentForm.setValue('portfolio.socialMediaReels', reels)}
-            isEditable={true}
-            maxReels={5}
-          />
-        </div>
 
         {/* Terms and Submit */}
         <div className="card">
