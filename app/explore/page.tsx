@@ -106,11 +106,11 @@ export default function ExplorePage() {
         ])
 
         if (categoriesResponse.success) {
-          setCategories(categoriesResponse.data)
+          setCategories(categoriesResponse.data || [])
         }
 
         if (locationsResponse.success) {
-          setLocations(locationsResponse.data)
+          setLocations(locationsResponse.data || [])
         }
       } catch (error) {
         console.error('Error fetching filters:', error)

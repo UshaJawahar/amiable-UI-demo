@@ -204,7 +204,7 @@ export default function RegisterPage() {
         password: data.password,
         phone: data.phone,
         purpose: data.purpose,
-        profileImage: null, // Keep for backward compatibility
+        profileImage: undefined, // Keep for backward compatibility
         profile_picture: profile_picture, // Added profile_picture
         ...(data.purpose === 'talent' && {
           userRole: data.role,
